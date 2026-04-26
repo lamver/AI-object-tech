@@ -1,0 +1,16 @@
+# Ядро для работы с моделями (GGUF) на CPU
+llama-cpp-python
+
+# Фреймворк для API
+fastapi
+uvicorn[standard]
+
+# Работа с данными и валидация
+pydantic
+pydantic-settings
+
+# Инструмент для автоматического скачивания моделей с Hugging Face
+huggingface_hub
+
+# Стандартная библиотека для работы с HTTP (если потребуется внутри логики)
+httpx
