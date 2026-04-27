@@ -9,24 +9,16 @@ services:
     # Мы объединяем проверку, скачивание и запуск в одну команду
     entrypoint: >
       sh -c "
-      MODEL_NAME='gemma-4-E4B-it-Q6_K.gguf';
       MODEL_PATH=\"/models/$$MODEL_NAME\";
       if [ ! -f \"$$MODEL_PATH\" ] || [ $$(stat -c%s \"$$MODEL_PATH\") -lt 1000000 ]; then
         echo 'Модель не найдена или битая. Начинаю загрузку...';
         apt-get update && apt-get install -y curl;
-        curl -L https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf -o \"$$MODEL_PATH\";
+        curl -L $$DONLOAD_URL -o \"$$MODEL_PATH\";
         echo 'Загрузка завершена!';
       else
         echo 'Модель найдена, запускаю сервер...';
       fi;
-      exec /app/llama-server \
-        -m \"$$MODEL_PATH\" \
-        --host 0.0.0.0 \
-        --port 8080 \
-        -t 12 \
-        -c 32768 \
-        -fa on \
-        --mlock \
-        -np 4
+      exec /app/llama-server -m \"$$MODEL_PATH\" --host 0.0.0.0 --port 8080 -t 12 -c 32768 -fa on --mlock -np 4
+
       "
     restart: unless-stopped
