@@ -14,7 +14,7 @@ services:
       if [ ! -f \"$$MODEL_PATH\" ] || [ $$(stat -c%s \"$$MODEL_PATH\") -lt 1000000 ]; then
         echo 'Модель не найдена или битая. Начинаю загрузку...';
         apt-get update && apt-get install -y curl;
-        curl -L https://huggingface.co -o \"$$MODEL_PATH\";
+        curl -L https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf -o \"$$MODEL_PATH\";
         echo 'Загрузка завершена!';
       else
         echo 'Модель найдена, запускаю сервер...';

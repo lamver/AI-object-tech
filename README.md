@@ -10,3 +10,41 @@ curl http://localhost:8078/v1/chat/completions \
 }'
 
 docker model run hf.co/unsloth/gemma-4-E4B-it-GGUF:UD-Q6_K_XL
+
+
+services:
+  model-downloader:
+      image: alpine:latest
+      container_name: model-downloader
+      volumes:
+        - ./models:/models
+      command: >
+        sh -c "
+        MODEL_NAME='gemma-4-E4B-it-Q6_K.gguf';
+        MODEL_PATH=\"/models/$$MODEL_NAME\";
+        if [ -f \"$$MODEL_PATH\" ] && [ $$(stat -c%s \"$$MODEL_PATH\") -gt 1000000 ]; then
+          echo 'Модель найдена и валидна. Выходим...';
+          exit 0;
+        else
+          echo 'Модель не найдена или повреждена. Качаем...';
+          apk add --no-cache curl;
+          curl -L https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf -o \"$$MODEL_PATH\";
+          exit 0;
+        fi
+        "
+  llama-cpp:
+    image: ghcr.io/ggml-org/llama.cpp:server  # Official image
+    container_name: llama-server
+    depends_on:
+      model-downloader:
+        condition: service_completed_successfully
+    ports:
+      - "${PORT:-8000}:8080"
+    volumes:
+      - ./models:/models  # Mount your local models directory
+    command: >
+      -m /models/gemma-4-E4B-it-Q6_K.gguf
+      --host 0.0.0.0
+      --port 8080
+      -c 2048
+    restart: unless-stopped
