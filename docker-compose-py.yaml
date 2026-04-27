@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  llm-api:
+    build: .
+    container_name: local_llm_service
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ./models:/app/models
+    environment:
+      - MODEL_REPO=${MODEL_REPO}
+      - MODEL_FILE=${MODEL_FILE}
+      - N_CTX=${N_CTX:-2048}
+      - CHAT_FORMAT=${CHAT_FORMAT:-gemma}
+      - HF_TOKEN=${HF_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMEORY:-4G} 
+    restart: unless-stopped

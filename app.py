@@ -77,8 +77,20 @@ async def chat(request: ChatRequest):
             }
 
         output = llm.create_chat_completion(**completion_args)
+        content = output["choices"][0]["message"]["content"]
+        if schema:
+            output["choices"][0]["message"]["content"] = clean_json_output(content)
         
+        return output
         return output
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+def clean_json_output(content: str):
+    # Убираем блоки ```json ... ``` и лишние пробелы
+    clean_content = re.sub(r'```json\n?|```', '', content).strip()
+    try:
+        return json.loads(clean_content)
+    except:
+        return clean_content

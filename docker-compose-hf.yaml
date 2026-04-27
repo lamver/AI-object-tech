@@ -1,0 +1,14 @@
+services:
+  llama-server:
+    # Используем путь к образу с Hugging Face напрямую
+    image: hf.co/unsloth/gemma-4-E4B-it-GGUF:UD-Q6_K_XL
+    container_name: gemma-server
+    ports:
+      - "8080:8080"
+    environment:
+      # Настройки сервера через переменные
+      - LLAMA_ARG_HOST=0.0.0.0
+      - LLAMA_ARG_PORT=8080
+      - LLAMA_ARG_N_PREDICT=2048
+      - LLAMA_ARG_CTX_SIZE=8192 # Можно увеличить до 32768+, так как у вас 60ГБ ОЗУ
+    restart: unless-stopped
