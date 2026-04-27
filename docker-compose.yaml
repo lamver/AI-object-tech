@@ -6,7 +6,7 @@ services:
         - ./models:/models
       command: >
         sh -c "
-        MODEL_NAME='gemma-4-E4B-it-GGUF:UD-Q6_K_XL';
+        MODEL_NAME='gemma-4-E4B-it-Q6_K.gguf';
         MODEL_PATH=\"/models/$$MODEL_NAME\";
         if [ ! -f \"$$MODEL_PATH\" ]; then
           echo 'Модель не найдена. Начинаю скачивание...';
@@ -29,7 +29,7 @@ services:
     volumes:
       - ./models:/models  # Mount your local models directory
     command: >
-      -m /models/gemma-4-E4B-it-GGUF:UD-Q6_K_XL
+      -m /models/gemma-4-E4B-it-Q6_K.gguf
       --host 0.0.0.0
       --port 8080
       -c 2048
