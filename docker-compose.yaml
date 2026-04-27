@@ -22,3 +22,16 @@ services:
 
       "
     restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "${PORT:-8000}:80"
+    environment:
+      - ALLOWED_IP=${ALLOWED_IP}
+    volumes:
+      - ./default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - llama-server
+    restart: unless-stopped
