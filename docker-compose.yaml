@@ -37,12 +37,18 @@ services:
     entrypoint: >
       sh -c "echo 'server {
         listen 80;
+        # Доверяем заголовкам провайдера, чтобы увидеть твой реальный IP
+        set_real_ip_from  0.0.0.0/0;
+        real_ip_header    X-Forwarded-For;
+
         allow ${ALLOWED_IP};
         deny all;
+
         location / {
           proxy_pass http://llama-server:8080;
           proxy_set_header Host $$host;
           proxy_set_header X-Real-IP $$remote_addr;
+          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
           proxy_read_timeout 300s;
         }
       }' > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
