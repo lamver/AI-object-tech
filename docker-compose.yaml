@@ -8,14 +8,14 @@ services:
         sh -c "
         MODEL_NAME='gemma-4-E4B-it-Q6_K.gguf';
         MODEL_PATH=\"/models/$$MODEL_NAME\";
-        if [ ! -f \"$$MODEL_PATH\" ]; then
-          echo 'Модель не найдена. Начинаю скачивание...';
-          apk add --no-cache curl;
-          # Прямая ссылка на скачивание конкретного файла
-          curl -L https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf?download=true -o \"$$MODEL_PATH\";
-          echo 'Загрузка завершена!';
+        if [ -f \"$$MODEL_PATH\" ] && [ $$(stat -c%s \"$$MODEL_PATH\") -gt 1000000 ]; then
+          echo 'Модель найдена и валидна. Выходим...';
+          exit 0;
         else
-          echo 'Модель уже загружена. Пропускаю скачивание.';
+          echo 'Модель не найдена или повреждена. Качаем...';
+          apk add --no-cache curl;
+          curl -L https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf -o \"$$MODEL_PATH\";
+          exit 0;
         fi
         "
   llama-cpp:
