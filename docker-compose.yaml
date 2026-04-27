@@ -1,36 +1,24 @@
 services:
-  model-downloader:
-      image: alpine:latest
-      container_name: model-downloader
-      volumes:
-        - ./models:/models
-      command: >
-        sh -c "
-        MODEL_NAME='gemma-4-E4B-it-Q6_K.gguf';
-        MODEL_PATH=\"/models/$$MODEL_NAME\";
-        if [ -f \"$$MODEL_PATH\" ] && [ $$(stat -c%s \"$$MODEL_PATH\") -gt 1000000 ]; then
-          echo 'Модель найдена и валидна. Выходим...';
-          exit 0;
-        else
-          echo 'Модель не найдена или повреждена. Качаем...';
-          apk add --no-cache curl;
-          curl -L https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q6_K.gguf -o \"$$MODEL_PATH\";
-          exit 0;
-        fi
-        "
-  llama-cpp:
-    image: ghcr.io/ggml-org/llama.cpp:server  # Official image
+  llama-server:
+    image: ghcr.io/ggml-org/llama.cpp:server
     container_name: llama-server
-    depends_on:
-      model-downloader:
-        condition: service_completed_successfully
     ports:
       - "${PORT:-8000}:8080"
     volumes:
-      - ./models:/models  # Mount your local models directory
-    command: >
-      -m /models/gemma-4-E4B-it-Q6_K.gguf
-      --host 0.0.0.0
-      --port 8080
-      -c 2048
+      - ./models:/models
+    # Мы объединяем проверку, скачивание и запуск в одну команду
+    entrypoint: >
+      sh -c "
+      MODEL_NAME='gemma-4-E4B-it-Q6_K.gguf';
+      MODEL_PATH=\"/models/$$MODEL_NAME\";
+      if [ ! -f \"$$MODEL_PATH\" ] || [ $$(stat -c%s \"$$MODEL_PATH\") -lt 1000000 ]; then
+        echo 'Модель не найдена или битая. Начинаю загрузку...';
+        apt-get update && apt-get install -y curl;
+        curl -L https://huggingface.co -o \"$$MODEL_PATH\";
+        echo 'Загрузка завершена!';
+      else
+        echo 'Модель найдена, запускаю сервер...';
+      fi;
+      exec /app/llama-server -m \"$$MODEL_PATH\" --host 0.0.0.0 --port 8080 -t 12 -c 8192
+      "
     restart: unless-stopped
