@@ -32,6 +32,7 @@ services:
       - "${PORT:-8000}:80"
     environment:
       - ALLOWED_IP=${ALLOWED_IP:-127.0.0.1}
+      - ALLOWED_IP_2=${ALLOWED_IP_2:-127.0.0.1}
       - LLAMA_HOST=llama-server
       - LLAMA_PORT=8080
       - WHITE_LIST=${WHITE_LIST}
@@ -46,6 +47,7 @@ services:
         real_ip_header    X-Forwarded-For;
 
         allow ${ALLOWED_IP};
+        allow ${ALLOWED_IP_2};
         deny all;
 
         location / {
