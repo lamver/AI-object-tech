@@ -44,7 +44,7 @@ services:
       echo 'allow 10.0.0.0/8;' >> /etc/nginx/conf.d/whitelist.inc;
 
       # 2. Добавляем IP из твоей переменной (через запятую)
-      IFS=','; for ip in $WHITE_LIST; do
+      IFS=','; for ip in $$WHITE_LIST; do
         # Убираем возможные пробелы, если они есть в строке
         clean_ip=$$(echo \$$ip | tr -d ' ');
         if [ ! -z \"\$$clean_ip\" ]; then
