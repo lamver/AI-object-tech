@@ -35,27 +35,34 @@ services:
       - LLAMA_HOST=llama-server
       - LLAMA_PORT=8080
     entrypoint: >
-      sh -c "echo 'server {
+     sh -c "
+      # 1. Генерируем строку с allow для каждого IP
+      ALLOWED_RULES=\"\";
+      for ip in \$(echo \${WHITE_LIST} | tr ',' ' '); do
+        ALLOWED_RULES=\"\$ALLOWED_RULES allow \$ip;\";
+      done;
+
+      # 2. Пишем конфиг целиком
+      echo \"server {
         listen 80;
         allow 192.168.64.0/24;
         allow 172.16.0.0/12;
         set_real_ip_from 0.0.0.0/0;
         real_ip_header X-Forwarded-For;
         
-        REPLACE_ME_WITH_IPS
+        \$ALLOWED_RULES
         
         deny all;
 
         location / {
           proxy_pass http://llama-server:8080;
-          proxy_set_header Host \$$host;
-          proxy_set_header X-Real-IP \$$remote_addr;
-          proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
+          proxy_set_header Host \$\$host;
+          proxy_set_header X-Real-IP \$\$remote_addr;
+          proxy_set_header X-Forwarded-For \$\$proxy_add_x_forwarded_for;
           proxy_read_timeout 300s;
         }
-      }' > /etc/nginx/conf.d/default.conf && 
-      sed -i \"s|REPLACE_ME_WITH_IPS|\$(echo \${WHITE_LIST} | sed 's/,/;/g; s/\([^;]\+\)/allow \1;/g')|g\" /etc/nginx/conf.d/default.conf && 
-      nginx -g 'daemon off;'"
+      }\" > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
+      "
     depends_on:
       - llama-server
     restart: unless-stopped
