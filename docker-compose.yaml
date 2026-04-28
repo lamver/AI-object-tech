@@ -37,32 +37,23 @@ services:
       - WHITE_LIST=${WHITE_LIST}
     entrypoint: >
       sh -c "
-      # 1. Сначала железно разрешаем Docker-сети
       echo 'allow 127.0.0.1;' > /etc/nginx/conf.d/whitelist.inc;
       echo 'allow 172.16.0.0/12;' >> /etc/nginx/conf.d/whitelist.inc;
       echo 'allow 192.168.0.0/16;' >> /etc/nginx/conf.d/whitelist.inc;
-      echo 'allow 10.0.0.0/8;' >> /etc/nginx/conf.d/whitelist.inc;
 
-      # 2. Добавляем IP из твоей переменной (через запятую)
-      IFS=','; for ip in $$WHITE_LIST; do
-        # Убираем возможные пробелы, если они есть в строке
-        clean_ip=$$(echo \$$ip | tr -d ' ');
-        if [ ! -z \"\$$clean_ip\" ]; then
-          echo \"allow \$$clean_ip;\" >> /etc/nginx/conf.d/whitelist.inc;
-        fi
-      done;
+      # Дробим WHITE_LIST и пишем в файл
+      if [ -n \"$$WHITE_LIST\" ]; then
+        for ip in $$(echo $$WHITE_LIST | tr ',' ' '); do
+          echo \"allow $$ip;\" >> /etc/nginx/conf.d/whitelist.inc;
+        done;
+      fi;
 
-      # 3. Закрываем доступ всем остальным
       echo 'deny all;' >> /etc/nginx/conf.d/whitelist.inc;
 
-      # 4. Пишем конфиг сервера
       echo \"server {
         listen 80;
-
-        # Доверяем заголовкам, чтобы видеть реальный IP клиента
         set_real_ip_from  0.0.0.0/0;
         real_ip_header    X-Forwarded-For;
-
         include /etc/nginx/conf.d/whitelist.inc;
 
         location / {
