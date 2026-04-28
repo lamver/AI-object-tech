@@ -20,7 +20,7 @@ services:
       else
         echo 'Модель найдена, запускаю сервер...';
       fi;
-      exec /app/llama-server -m \"$$MODEL_PATH\" --host 0.0.0.0 --port 8080 -t 24 -c 32768 -fa on --mlock -np 4 --reasoning off
+      exec /app/llama-server -m \"$$MODEL_PATH\" --host 0.0.0.0 --port 8080 -t 24 -c 32768 -b 1024 -fa on --mlock -np 4 --reasoning off
 
       "
     restart: unless-stopped
