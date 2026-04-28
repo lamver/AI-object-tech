@@ -36,26 +36,43 @@ services:
       - LLAMA_PORT=8080
       - WHITE_LIST=${WHITE_LIST}
     entrypoint: >
-      sh -c "echo 'server {
+      sh -c "
+      # 1. Сначала железно разрешаем Docker-сети
+      echo 'allow 127.0.0.1;' > /etc/nginx/conf.d/whitelist.inc;
+      echo 'allow 172.16.0.0/12;' >> /etc/nginx/conf.d/whitelist.inc;
+      echo 'allow 192.168.0.0/16;' >> /etc/nginx/conf.d/whitelist.inc;
+      echo 'allow 10.0.0.0/8;' >> /etc/nginx/conf.d/whitelist.inc;
+
+      # 2. Добавляем IP из твоей переменной (через запятую)
+      IFS=','; for ip in $WHITE_LIST; do
+        # Убираем возможные пробелы, если они есть в строке
+        clean_ip=$$(echo \$$ip | tr -d ' ');
+        if [ ! -z \"\$$clean_ip\" ]; then
+          echo \"allow \$$clean_ip;\" >> /etc/nginx/conf.d/whitelist.inc;
+        fi
+      done;
+
+      # 3. Закрываем доступ всем остальным
+      echo 'deny all;' >> /etc/nginx/conf.d/whitelist.inc;
+
+      # 4. Пишем конфиг сервера
+      echo \"server {
         listen 80;
-        # Разрешаем внутреннюю сеть Docker (обязательно)
-        allow 192.168.64.0/24;
-        allow 172.16.0.0/12;
-        # Доверяем заголовкам провайдера, чтобы увидеть твой реальный IP
+
+        # Доверяем заголовкам, чтобы видеть реальный IP клиента
         set_real_ip_from  0.0.0.0/0;
         real_ip_header    X-Forwarded-For;
 
-        allow ${ALLOWED_IP};
-        deny all;
+        include /etc/nginx/conf.d/whitelist.inc;
 
         location / {
           proxy_pass http://llama-server:8080;
-          proxy_set_header Host $$host;
-          proxy_set_header X-Real-IP $$remote_addr;
-          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+          proxy_set_header Host \$host;
+          proxy_set_header X-Real-IP \$remote_addr;
+          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
           proxy_read_timeout 300s;
         }
-      }' > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+      }\" > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     depends_on:
       - llama-server
     restart: unless-stopped
