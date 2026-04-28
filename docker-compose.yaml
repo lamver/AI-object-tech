@@ -36,34 +36,26 @@ services:
       - LLAMA_PORT=8080
       - WHITE_LIST=${WHITE_LIST}
     entrypoint: >
-      sh -c "
-      echo 'allow 127.0.0.1;' > /etc/nginx/conf.d/whitelist.inc;
-      echo 'allow 172.16.0.0/12;' >> /etc/nginx/conf.d/whitelist.inc;
-      echo 'allow 192.168.0.0/16;' >> /etc/nginx/conf.d/whitelist.inc;
-
-      # Дробим WHITE_LIST и пишем в файл
-      if [ -n \"$$WHITE_LIST\" ]; then
-        for ip in $$(echo $$WHITE_LIST | tr ',' ' '); do
-          echo \"allow $$ip;\" >> /etc/nginx/conf.d/whitelist.inc;
-        done;
-      fi;
-
-      echo 'deny all;' >> /etc/nginx/conf.d/whitelist.inc;
-
-      echo \"server {
+      sh -c "echo 'server {
         listen 80;
+        # Разрешаем внутреннюю сеть Docker (обязательно)
+        allow 192.168.64.0/24;
+        allow 172.16.0.0/12;
+        # Доверяем заголовкам провайдера, чтобы увидеть твой реальный IP
         set_real_ip_from  0.0.0.0/0;
         real_ip_header    X-Forwarded-For;
-        include /etc/nginx/conf.d/whitelist.inc;
+
+        allow ${ALLOWED_IP};
+        deny all;
 
         location / {
           proxy_pass http://llama-server:8080;
-          proxy_set_header Host \$host;
-          proxy_set_header X-Real-IP \$remote_addr;
-          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+          proxy_set_header Host $$host;
+          proxy_set_header X-Real-IP $$remote_addr;
+          proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
           proxy_read_timeout 300s;
         }
-      }\" > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+      }' > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     depends_on:
       - llama-server
     restart: unless-stopped
