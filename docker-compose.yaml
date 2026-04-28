@@ -34,6 +34,7 @@ services:
       - ALLOWED_IP=${ALLOWED_IP:-127.0.0.1}
       - LLAMA_HOST=llama-server
       - LLAMA_PORT=8080
+      - WHITE_LIST=${WHITE_LIST}
     entrypoint: >
      # 1. Превращаем список IP в формат Nginx (allow IP;)
       export ALLOW_IPS=\$(echo \$WHITE_LIST | tr ',' '\n' | sed 's/^/allow /; s/$/;/' | tr '\n' ' ');
