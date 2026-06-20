@@ -3,7 +3,7 @@ services:
     image: ghcr.io/ggml-org/llama.cpp:server
     container_name: llama-server
     ports:
-      - "127.0.0.1:8888:8080"
+      - "127.0.0.1:8889:8080"
     expose:
       - "8080"
     volumes:
