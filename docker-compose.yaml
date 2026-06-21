@@ -6,6 +6,10 @@ services:
       - "127.0.0.1:8889:8080"
     expose:
       - "8080"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - ./models:/models
     # Мы объединяем проверку, скачивание и запуск в одну команду
