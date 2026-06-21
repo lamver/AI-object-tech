@@ -25,7 +25,7 @@ services:
       else
         echo 'Модель найдена, запускаю сервер...';
       fi;
-      exec /app/llama-server -m \"$$MODEL_PATH\"  --mmproj \"/models/mmproj-F16.gguf\" --embeddings  --host 0.0.0.0 --port 8080 -t 24 -c 131072 -b 16384 -fa on --mlock --context-shift -np 4 --cache-prompt --cache-ram 2048 --lookup-cache-dynamic /models/lookup_cache.bin --reasoning off
+      exec /app/llama-server -m \"$$MODEL_PATH\"  --mmproj \"/models/mmproj-F16.gguf\" --embeddings  --host 0.0.0.0 --port 8080 -t 24 -c 131072 -b 16384 -fa on --mlock --context-shift -np 4 --cache-prompt --cache-ram 2048 --lookup-cache-dynamic /models/lookup_cache.bin --reasoning off --jinja
 
       "
     restart: unless-stopped
