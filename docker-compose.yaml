@@ -12,7 +12,7 @@ services:
         hard: -1
     volumes:
       - ./models:/models
-      - './aitech.jinja:/app/gemma4.jinja'
+      - './aitech.jinja:/app/aitech.jinja'
     # Мы объединяем проверку, скачивание и запуск в одну команду
     entrypoint: >
       sh -c "
